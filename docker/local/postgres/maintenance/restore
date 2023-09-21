@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+
+
+set -o errexit
+set -o pipefail
+set -o nounset
+
+
+working_dir="$(dirname ${0})"
+source "${working_dir}/_sourced/constants.sh"
+source "${working_dir}/_sourced/messages.sh"
+
+
+if [[ -z ${1+x} ]]; then
+    message_error "Backup filename is not specified yet, it is required paramenter, Make u provide and try again. "
+    exit 1
+fi
+
+backup_filename="${BACKUP_DIR_PATH}/${1}"
+
+if [[ ! -f "${backup_filename}" ]]; then
+        message_error "No backups with specified filename found Check out the 'backups' maintenance script output to see if there is one and try again "
+    exit 1
+fi
+
+
+message_welcome "Restoring the '${POSTGRES_DB}' database from the '${backup_filename}' backup... "
+
+if [[ "$POSTGRES_USER" == "posgtres" ]]; then
+    message_error "Restoring as 'postgres' user is not supported. Assign 'POSTGRES_USER' env with another one and try again"
+    exit 1
+fi
+
+export PG_HOST="${POSTGRES_HOST}"
+export PG_PORT="${POSTGRES_PORT}"
+export PGDATABASE="${POSTGRES_DB}"
+export PGUSER="${POSTGRES_USER}"
+export PGPASSWORD="${POSTGRES_PASSWORD}"
+
+message_info "Dropping the database..."
+dropdb "$PGDATABASE"
+
+message_info "Creating new database..."
+createdb --owner="$POSTGRES_USER"
+
+
+message_info "Applying the backup to new database..."
+gunzip -c="${backup_filename}" | psql "${POSTGRES_DB}"
+
+message_success="The '${POSTGRES_DB}' database has been restored from  '${backup_filename}' backup. "
