@@ -1,7 +1,8 @@
 from pathlib import Path
 
 import environ
-from django.conf.global_settings import INSTALLED_APPS, MEDIA_URL, MEDIA_ROOT
+from django.conf.global_settings import INSTALLED_APPS, MEDIA_URL, MEDIA_ROOT,\
+    LOGGING
 
 env = environ.Env()
 
@@ -175,3 +176,29 @@ MEDIA_ROOT = str(ROOT_DIR / "/mediafiles/")
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 CORS_URLS_REGEX = r"^/api/.*$"
+
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        # "verbose":{
+        #         "format": "%(levelname)s %(name) - 12s %(asctime)s %(modules)s " 
+        #         "%(process)d %(thread)d %(message)s"
+        #     } 
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console":{
+            "level": "DEBUG",
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+        }
+    },
+    "root": {
+        "level": "INFO", "handlers": ["console"]
+    },
+}
